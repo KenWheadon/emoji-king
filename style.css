@@ -606,7 +606,7 @@ body {
 .post {
   background: #ffffff;
   margin: var(--spacing-sm) var(--spacing-md);
-  padding: var(--spacing-lg);
+  padding: var(--spacing-lg) 70px var(--spacing-lg) var(--spacing-lg);
   border-radius: var(--border-radius-lg);
   border: 5px solid var(--border-color);
   box-shadow: var(--shadow-md);
@@ -1248,7 +1248,7 @@ body {
 
   .post {
     margin: var(--spacing-xs) var(--spacing-sm);
-    padding: var(--spacing-md);
+    padding: var(--spacing-md) 55px var(--spacing-md) var(--spacing-md);
   }
 
   .post-text {
