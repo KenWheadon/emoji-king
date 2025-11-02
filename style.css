@@ -115,6 +115,10 @@ body {
   animation: screenShake 0.5s ease-in-out;
 }
 
+#game-container.pulse {
+  animation: screenPulse 0.4s ease-out;
+}
+
 .screen {
   position: absolute;
   inset: 0;
@@ -315,9 +319,8 @@ body {
   background: var(--primary-bg);
   border: 5px solid var(--border-color);
   border-radius: var(--border-radius-xl);
-  padding: 2.5rem;
-  max-width: 450px;
-  max-height: 85vh;
+  padding: 1.5rem;
+  max-height: 90vh;
   overflow-y: auto;
   box-shadow: var(--shadow-lg);
   animation: modalSlideIn 0.4s ease-out;
@@ -345,7 +348,7 @@ body {
 
 .modal-close:hover {
   background: var(--error-color);
-  color: var(--secondary-bg);
+  color: var(--primary-accent);
   transform: translate(1px, 1px);
   box-shadow: 2px 2px 0 var(--border-color);
 }
@@ -764,7 +767,7 @@ body {
 .particle {
   position: absolute;
   pointer-events: none;
-  z-index: 100;
+  z-index: 1000;
   animation: particleFloat 1s ease-out forwards;
 }
 
@@ -1125,6 +1128,21 @@ body {
   60%,
   80% {
     transform: translate(10px, 0);
+  }
+}
+
+@keyframes screenPulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.02);
+    filter: brightness(1.15);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
   }
 }
 
