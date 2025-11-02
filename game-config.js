@@ -524,7 +524,7 @@ const GAME_MESSAGES = [
     text: "All house chores are done. That's an achievement.",
     perfectIcons: [ICON.HOUSE],
     correctIcons: [ICON.BASKET],
-    neutralIcons: [ICON.MONEY, ICON.GIFT],
+    neutralIcons: [ICON.CDPLAYER, ICON.GIFT],
     wrongIcons: [ICON.SNAPPY],
     horribleIcons: [ICON.MONEY],
   },
@@ -668,7 +668,7 @@ const GAME_MESSAGES = [
     text: "Too green to loved, rich to be hated. Being Martha is hard work.",
     perfectIcons: [ICON.GOBLIN],
     correctIcons: [ICON.HEART],
-    neutralIcons: [ICON.RADIO, ICON.CROWN],
+    neutralIcons: [ICON.FIRE, ICON.CROWN],
     wrongIcons: [ICON.FIRE],
     horribleIcons: [ICON.RADIO],
   },
@@ -975,14 +975,14 @@ const GAME_SCORING = {
   perfectPoints: 5, // Points for perfect icon
   correctPoints: 2, // Points for correct icon
   neutralPoints: 0, // Points for neutral icon
-  wrongPoints: -3, // Points for wrong icon
-  horriblePoints: -6, // Points for horrible icon
-  timeoutPenalty: -2, // Points lost when time runs out
-  fastBonus: 2, // Bonus for <1s reaction
-  quickBonus: 1, // Bonus for <2s reaction
+  wrongPoints: -6, // Points for wrong icon
+  horriblePoints: -10, // Points for horrible icon
+  timeoutPenalty: -4, // Points lost when time runs out
+  fastBonus: 20, // Bonus for <1s reaction
+  quickBonus: 5, // Bonus for <2s reaction
   targetScore: 500, // Score needed to win
   targetScoreLose: -100, // Score needed to lose
   streak5Multiplier: 2, // Multiplier at 5 streak
   streak10Multiplier: 3, // Multiplier at 10 streak
-  postTimeLimit: 12000, // Time limit per post in milliseconds (10 seconds)
+  postTimeLimit: 10000, // Time limit per post in milliseconds (10 seconds)
 };
