@@ -980,9 +980,9 @@ const GAME_SCORING = {
   timeoutPenalty: -2, // Points lost when time runs out
   fastBonus: 2, // Bonus for <1s reaction
   quickBonus: 1, // Bonus for <2s reaction
-  targetScore: 1000, // Score needed to win
+  targetScore: 500, // Score needed to win
   targetScoreLose: -100, // Score needed to lose
   streak5Multiplier: 2, // Multiplier at 5 streak
   streak10Multiplier: 3, // Multiplier at 10 streak
-  postTimeLimit: 10000, // Time limit per post in milliseconds (10 seconds)
+  postTimeLimit: 12000, // Time limit per post in milliseconds (10 seconds)
 };

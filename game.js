@@ -220,14 +220,14 @@ function formatTime(ms) {
 
 // Get dynamic post time limit based on score
 function getPostTimeLimit() {
-  if (gameState.score < 26) {
-    return GAME_SCORING.postTimeLimit; // 10 seconds for under 25 points
-  } else if (gameState.score < 51) {
-    return GAME_SCORING.postTimeLimit * 0.8; // 8 seconds for 26-50 points
-  } else if (gameState.score < 76) {
-    return GAME_SCORING.postTimeLimit * 0.6; // 6 seconds for 51-75 points
+  if (gameState.score < GAME_SCORING.targetScore * 0.4) {
+    return GAME_SCORING.postTimeLimit;
+  } else if (gameState.score < GAME_SCORING.targetScore * 0.6) {
+    return GAME_SCORING.postTimeLimit * 0.8;
+  } else if (gameState.score < GAME_SCORING.targetScore * 0.8) {
+    return GAME_SCORING.postTimeLimit * 0.6;
   } else {
-    return GAME_SCORING.postTimeLimit * 0.5; // 5 seconds for 76+ points
+    return GAME_SCORING.postTimeLimit * 0.5;
   }
 }
 
