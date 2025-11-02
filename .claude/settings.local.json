@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(start game-screen.html)",
+      "Bash(start index.html)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

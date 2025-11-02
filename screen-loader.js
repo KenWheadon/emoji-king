@@ -129,8 +129,8 @@ const ScreenLoader = {
 
         const imagePaths = GAME_ICONS.map(icon => `images/${icon.file}`);
 
-        // Also preload company logo
-        imagePaths.push('images/company-logo.png');
+        // Also preload game logo
+        imagePaths.push('images/game-logo.png');
 
         this.totalImages = imagePaths.length;
         this.imagesLoaded = 0;

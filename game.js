@@ -22,7 +22,8 @@ const gameState = {
     gameDuration: 0,
     timerInterval: null,
     postTimerInterval: null,
-    postTimeRemaining: 0
+    postTimeRemaining: 0,
+    messageQueue: []    // Shuffled queue of messages to ensure no repeats until all shown
 };
 
 // DOM Elements - initialized after screens load
@@ -80,11 +81,24 @@ function formatTime(ms) {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+// Get dynamic post time limit based on score
+function getPostTimeLimit() {
+    if (gameState.score < 26) {
+        return 10000; // 10 seconds for under 25 points
+    } else if (gameState.score < 51) {
+        return 8000; // 8 seconds for 26-50 points
+    } else if (gameState.score < 76) {
+        return 6000; // 6 seconds for 51-75 points
+    } else {
+        return 5000; // 5 seconds for 76+ points
+    }
+}
+
 // Post Timer Functions
 function startPostTimer() {
     stopPostTimer(); // Clear any existing timer
 
-    gameState.postTimeRemaining = GAME_SCORING.postTimeLimit;
+    gameState.postTimeRemaining = getPostTimeLimit();
     elements.postTimer.classList.remove('hidden');
     updatePostTimerUI();
 
@@ -112,7 +126,8 @@ function stopPostTimer() {
 function updatePostTimerUI() {
     if (!elements.postTimerFill || !elements.postTimerText) return;
 
-    const percentage = (gameState.postTimeRemaining / GAME_SCORING.postTimeLimit) * 100;
+    const maxTime = getPostTimeLimit();
+    const percentage = (gameState.postTimeRemaining / maxTime) * 100;
     const seconds = (gameState.postTimeRemaining / 1000).toFixed(1);
 
     elements.postTimerFill.style.width = percentage + '%';
@@ -140,6 +155,10 @@ function handlePostTimeout() {
 
     if (!gameState.isPlaying || !gameState.currentPost) return;
 
+    // Check if this post was already handled (reaction was clicked)
+    if (gameState.currentPost.handled) return;
+    gameState.currentPost.handled = true;
+
     const post = gameState.currentPost;
 
     // Apply timeout penalty
@@ -166,8 +185,23 @@ function handlePostTimeout() {
 }
 
 // Utility Functions
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
 function getRandomPost() {
-    return postTemplates[Math.floor(Math.random() * postTemplates.length)];
+    // If queue is empty, refill with a shuffled copy of all messages
+    if (gameState.messageQueue.length === 0) {
+        gameState.messageQueue = shuffleArray(postTemplates);
+    }
+
+    // Pop the next message from the queue
+    return gameState.messageQueue.shift();
 }
 
 function getIconById(id) {
@@ -387,7 +421,8 @@ function showNextPost() {
 
     gameState.currentPost = {
         data: postData,
-        element: createPost(postData)
+        element: createPost(postData),
+        handled: false
     };
     gameState.currentIconChoices = iconChoices;
     gameState.postStartTime = Date.now();
@@ -402,6 +437,10 @@ function showNextPost() {
 // Reaction Handling
 function handleReaction(iconId, x, y) {
     if (!gameState.isPlaying || !gameState.currentPost) return;
+
+    // Mark that we've handled this post to prevent timeout from firing
+    if (gameState.currentPost.handled) return;
+    gameState.currentPost.handled = true;
 
     // Stop the post timer since player responded
     stopPostTimer();
@@ -544,6 +583,7 @@ function startGame() {
     gameState.timeoutIcons = 0;
     gameState.isPlaying = true;
     gameState.currentPost = null;
+    gameState.messageQueue = []; // Reset message queue for fresh shuffle
 
     // Clear feed
     elements.feed.innerHTML = '';
@@ -660,8 +700,23 @@ function setupControls() {
     });
 }
 
+// Set viewport height CSS variable for better mobile support
+function setViewportHeight() {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+
 // Initialize
 async function init() {
+    // Set viewport height on load
+    setViewportHeight();
+
+    // Update viewport height on resize and orientation change
+    window.addEventListener('resize', setViewportHeight);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(setViewportHeight, 100);
+    });
+
     // Wait for screens to load
     let retries = 0;
     const maxRetries = 50; // 5 seconds max wait
