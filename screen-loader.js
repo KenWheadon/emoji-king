@@ -13,6 +13,8 @@ const ScreenLoader = {
     imagesLoaded: 0,
     totalImages: 0,
     loadingComplete: false,
+    loadingBarInterval: null,
+    preloadedImages: [], // Store references to preloaded images
 
     async init() {
         this.container = document.getElementById('game-container');
@@ -63,11 +65,15 @@ const ScreenLoader = {
         const intervalTime = 50; // Update every 50ms
         const increment = (100 / duration) * intervalTime;
 
-        const interval = setInterval(() => {
+        // Store interval reference for cleanup
+        this.loadingBarInterval = setInterval(() => {
             progress += increment;
             if (progress >= 100) {
                 progress = 100;
-                clearInterval(interval);
+                if (this.loadingBarInterval) {
+                    clearInterval(this.loadingBarInterval);
+                    this.loadingBarInterval = null;
+                }
             }
 
             progressFill.style.width = `${progress}%`;
@@ -97,6 +103,11 @@ const ScreenLoader = {
             // Fade out animation
             setTimeout(() => {
                 loadingScreen.classList.add('hidden');
+                // Clean up interval if it's still running
+                if (this.loadingBarInterval) {
+                    clearInterval(this.loadingBarInterval);
+                    this.loadingBarInterval = null;
+                }
             }, 500);
         }
     },
@@ -195,6 +206,8 @@ const ScreenLoader = {
 
             img.onload = () => {
                 this.imagesLoaded++;
+                // Store reference to preloaded image
+                this.preloadedImages.push(img);
                 resolve(img);
             };
 

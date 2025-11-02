@@ -24,6 +24,8 @@ const gameState = {
   postTimerInterval: null,
   postTimeRemaining: 0,
   messageQueue: [], // Shuffled queue of messages to ensure no repeats until all shown
+  eventListeners: [], // Track event listeners for cleanup
+  keydownHandler: null, // Store keydown handler reference
 };
 
 // DOM Elements - initialized after screens load
@@ -375,6 +377,7 @@ function createPost(postData) {
 }
 
 function updateReactionBar(iconChoices) {
+  // Clear existing content and event listeners
   elements.reactionBar.innerHTML = "";
 
   iconChoices.forEach((icon, index) => {
@@ -395,18 +398,24 @@ function updateReactionBar(iconChoices) {
     btn.appendChild(img);
     btn.appendChild(hint);
 
-    btn.addEventListener("click", (e) => {
+    // Create named handler for cleanup
+    const clickHandler = () => {
       const rect = btn.getBoundingClientRect();
       const x = rect.left + rect.width / 2;
       const y = rect.top + rect.height / 2;
       handleReaction(icon.id, x, y);
-    });
+    };
+
+    btn.addEventListener("click", clickHandler);
 
     elements.reactionBar.appendChild(btn);
   });
 }
 
 function showNextPost() {
+  // Clean up old posts to prevent DOM accumulation
+  cleanupOldPosts();
+
   const postData = getRandomPost();
 
   // Create icon choices: mix of all 5 categories
@@ -614,6 +623,16 @@ function handleReaction(iconId, x, y) {
   }, 600);
 }
 
+// Clean up old posts from feed to prevent DOM accumulation
+function cleanupOldPosts() {
+  const posts = elements.feed.querySelectorAll(".post");
+  // Keep only the last 10 posts to prevent memory issues
+  if (posts.length > 10) {
+    const postsToRemove = Array.from(posts).slice(0, posts.length - 10);
+    postsToRemove.forEach(post => post.remove());
+  }
+}
+
 // Game Flow
 function startGame() {
   // Stop any existing timers first
@@ -736,8 +755,8 @@ function setupControls() {
   elements.playAgainBtn.addEventListener("click", startGame);
   elements.backToMenuBtn.addEventListener("click", backToMenu);
 
-  // Keyboard controls for game
-  document.addEventListener("keydown", (e) => {
+  // Keyboard controls for game - store reference for cleanup
+  gameState.keydownHandler = (e) => {
     if (!gameState.isPlaying) return;
 
     const key = e.key;
@@ -754,7 +773,9 @@ function setupControls() {
         );
       }
     }
-  });
+  };
+
+  document.addEventListener("keydown", gameState.keydownHandler);
 }
 
 // Set viewport height CSS variable for better mobile support
