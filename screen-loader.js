@@ -12,6 +12,7 @@ const ScreenLoader = {
     container: null,
     imagesLoaded: 0,
     totalImages: 0,
+    loadingComplete: false,
 
     async init() {
         this.container = document.getElementById('game-container');
@@ -20,31 +21,79 @@ const ScreenLoader = {
         await this.loadScreen('loading', this.screens.loading);
         this.showLoadingScreen();
 
-        // Load all other screens
-        const success = await this.loadAll();
-        if (!success) {
-            console.error('Failed to load screens - cannot continue');
-            this.updateProgress(0, 1, 'Error loading screens!');
-            return; // Stop initialization
-        }
+        // Start fake loading bar animation
+        this.startFakeLoadingBar();
 
-        // Preload all images
-        await this.preloadImages();
+        // Load all other screens in background
+        const loadPromise = this.loadAll();
+
+        // Preload all images in background
+        const imagePromise = loadPromise.then(success => {
+            if (!success) {
+                console.error('Failed to load screens - cannot continue');
+                return false;
+            }
+            return this.preloadImages();
+        });
+
+        // Wait for minimum 2 seconds AND all loading to complete
+        await Promise.all([
+            new Promise(resolve => setTimeout(resolve, 2000)),
+            imagePromise
+        ]);
+
+        console.log('Loading complete after minimum display time');
 
         // Hide loading screen after everything is ready
         this.hideLoadingScreen();
+
+        // Mark loading as complete
+        this.loadingComplete = true;
+    },
+
+    startFakeLoadingBar() {
+        const progressFill = document.getElementById('progress-fill');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const loadingStatus = document.getElementById('loading-status');
+
+        if (!progressFill) return;
+
+        let progress = 0;
+        const duration = 2000; // 2 seconds
+        const intervalTime = 50; // Update every 50ms
+        const increment = (100 / duration) * intervalTime;
+
+        const interval = setInterval(() => {
+            progress += increment;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(interval);
+            }
+
+            progressFill.style.width = `${progress}%`;
+            if (progressPercentage) {
+                progressPercentage.textContent = `${Math.floor(progress)}%`;
+            }
+            if (loadingStatus && progress < 100) {
+                const messages = ['Loading assets...', 'Preparing game...', 'Almost ready...'];
+                const messageIndex = Math.floor((progress / 100) * messages.length);
+                loadingStatus.textContent = messages[Math.min(messageIndex, messages.length - 1)];
+            }
+        }, intervalTime);
     },
 
     showLoadingScreen() {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
             loadingScreen.classList.remove('hidden');
+            loadingScreen.classList.add('loading-active');
         }
     },
 
     hideLoadingScreen() {
         const loadingScreen = document.getElementById('loading-screen');
         if (loadingScreen) {
+            loadingScreen.classList.remove('loading-active');
             // Fade out animation
             setTimeout(() => {
                 loadingScreen.classList.add('hidden');
@@ -81,15 +130,8 @@ const ScreenLoader = {
             // Load screens (excluding loading screen as it's already loaded)
             const screenKeys = Object.keys(this.screens).filter(key => key !== 'loading');
 
-            // Use dynamic count instead of hardcoded 4
-            this.updateProgress(0, screenKeys.length, 'Loading screens...');
-
-            let loadedCount = 0;
-
             for (const key of screenKeys) {
                 await this.loadScreen(key, this.screens[key]);
-                loadedCount++;
-                this.updateProgress(loadedCount, screenKeys.length, `Loading ${key} screen...`);
             }
 
             console.log('✅ All screens loaded successfully');
@@ -129,13 +171,12 @@ const ScreenLoader = {
 
         const imagePaths = GAME_ICONS.map(icon => `images/${icon.file}`);
 
-        // Also preload game logo
+        // Also preload game logo and company logo
         imagePaths.push('images/game-logo.png');
+        imagePaths.push('images/company-logo.png');
 
         this.totalImages = imagePaths.length;
         this.imagesLoaded = 0;
-
-        this.updateProgress(0, this.totalImages, 'Loading icons...');
 
         // Preload all images
         const promises = imagePaths.map(path => this.loadImage(path));
@@ -149,27 +190,17 @@ const ScreenLoader = {
     },
 
     loadImage(src) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const img = new Image();
 
             img.onload = () => {
                 this.imagesLoaded++;
-                this.updateProgress(
-                    this.imagesLoaded,
-                    this.totalImages,
-                    `Loading icons... (${this.imagesLoaded}/${this.totalImages})`
-                );
                 resolve(img);
             };
 
             img.onerror = () => {
                 console.warn(`Failed to load image: ${src}`);
                 this.imagesLoaded++;
-                this.updateProgress(
-                    this.imagesLoaded,
-                    this.totalImages,
-                    `Loading icons... (${this.imagesLoaded}/${this.totalImages})`
-                );
                 resolve(null); // Don't reject, just continue
             };
 

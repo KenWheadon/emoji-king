@@ -41,8 +41,9 @@ function showScreen(screen) {
   if (elements.gameScreen) elements.gameScreen.classList.add("hidden");
   if (elements.winScreen) elements.winScreen.classList.add("hidden");
 
-  // Show requested screen
+  // Show requested screen and enable animations
   screen.classList.remove("hidden");
+  screen.classList.remove("no-animate");
 }
 
 function showModal() {
@@ -762,6 +763,19 @@ async function init() {
   if (!ScreenLoader.isReady()) {
     console.error("Failed to load all screens in time");
     return;
+  }
+
+  // Wait for loading screen to complete (minimum 2 seconds + fade out)
+  retries = 0;
+  const maxLoadingRetries = 100; // 10 seconds max wait
+
+  while (!ScreenLoader.loadingComplete && retries < maxLoadingRetries) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    retries++;
+  }
+
+  if (!ScreenLoader.loadingComplete) {
+    console.warn("Loading screen did not complete in expected time");
   }
 
   // Re-get elements after screens are loaded
