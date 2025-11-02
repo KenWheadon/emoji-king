@@ -747,6 +747,7 @@ body {
   animation: feedbackPop 1s ease-out;
   border: 4px solid var(--border-color);
   box-shadow: var(--shadow-lg);
+  transition: transform 0.3s ease-out;
 }
 
 .feedback.hidden {

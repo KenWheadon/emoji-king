@@ -244,16 +244,39 @@ function getTimeBonus() {
 }
 
 function showFeedback(text, isPositive) {
-  elements.feedback.textContent = text;
-  elements.feedback.className = "feedback";
+  const gameScreen = document.getElementById("game-screen");
+  if (!gameScreen) return;
+
+  // Create a new feedback element for each message
+  const feedback = document.createElement("div");
+  feedback.className = "feedback";
+  feedback.textContent = text;
+
   if (isPositive) {
-    elements.feedback.classList.add("positive");
+    feedback.classList.add("positive");
   } else {
-    elements.feedback.classList.add("negative");
+    feedback.classList.add("negative");
   }
 
+  // Find all existing feedback elements and move them up
+  const existingFeedbacks = gameScreen.querySelectorAll(".feedback");
+  existingFeedbacks.forEach((existing) => {
+    const currentOffset = parseInt(existing.dataset.offset || "0");
+    const newOffset = currentOffset + 1;
+    existing.dataset.offset = newOffset;
+    existing.style.transform = `translate(-50%, calc(-50% - ${newOffset * 80}px))`;
+  });
+
+  // Set initial offset for new feedback
+  feedback.dataset.offset = "0";
+  feedback.style.transform = "translate(-50%, -50%)";
+
+  // Add to DOM
+  gameScreen.appendChild(feedback);
+
+  // Remove after animation completes
   setTimeout(() => {
-    elements.feedback.classList.add("hidden");
+    feedback.remove();
   }, 1000);
 }
 
@@ -796,7 +819,7 @@ async function init() {
   elements.target = document.getElementById("target");
   elements.multiplier = document.getElementById("multiplier");
   elements.multiplierValue = document.getElementById("multiplier-value");
-  elements.feedback = document.getElementById("feedback");
+  // Feedback elements are created dynamically
   elements.reactionBar = document.getElementById("reaction-bar");
   elements.winTitle = document.getElementById("win-title");
   elements.winMessage = document.getElementById("win-message");
