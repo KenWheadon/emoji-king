@@ -1,0 +1,42 @@
+<div id="game-screen" class="screen hidden">
+    <!-- Header with score and stats -->
+    <header id="game-header">
+        <div class="stat-group">
+            <div class="stat">
+                <span class="stat-label">SCORE</span>
+                <span id="score" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">STREAK</span>
+                <span id="streak" class="stat-value">0</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">TIME</span>
+                <span id="timer" class="stat-value">0:00</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">TARGET</span>
+                <span id="target" class="stat-value">100</span>
+            </div>
+        </div>
+        <div id="multiplier" class="multiplier hidden">×<span id="multiplier-value">1</span></div>
+    </header>
+
+    <!-- Feed container (posts scroll upward) -->
+    <div id="feed-container">
+        <div id="feed"></div>
+        <!-- Post countdown timer -->
+        <div id="post-timer" class="post-timer hidden">
+            <div class="post-timer-bar">
+                <div id="post-timer-fill" class="post-timer-fill"></div>
+            </div>
+            <div id="post-timer-text" class="post-timer-text">5.0s</div>
+        </div>
+    </div>
+
+    <!-- Reaction bar (always visible at bottom) -->
+    <div id="reaction-bar"></div>
+
+    <!-- Feedback popup -->
+    <div id="feedback" class="feedback hidden"></div>
+</div>
