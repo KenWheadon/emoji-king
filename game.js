@@ -173,6 +173,7 @@ function showScreen(screen) {
   if (elements.startScreen) elements.startScreen.classList.add("hidden");
   if (elements.gameScreen) elements.gameScreen.classList.add("hidden");
   if (elements.winScreen) elements.winScreen.classList.add("hidden");
+  if (elements.lossScreen) elements.lossScreen.classList.add("hidden");
 
   // Show requested screen and enable animations
   screen.classList.remove("hidden");
@@ -286,8 +287,8 @@ function updatePostTimerUI() {
     elements.postTimerText.classList.add("warning");
     elements.postTimerText.classList.remove("critical");
   } else {
-    elements.postTimerFill.classList.remove("warning", "critical");
-    elements.postTimerText.classList.remove("warning", "critical");
+    elements.postTimerFill.classList.remove("warning,critical");
+    elements.postTimerText.classList.remove("warning,critical");
   }
 }
 
@@ -322,7 +323,11 @@ function handlePostTimeout() {
   updateUI();
 
   // Check if score went too negative (game over)
-  // For now, just continue to next post
+  if (gameState.score <= GAME_SCORING.targetScoreLose) {
+    endGame(false);
+    return;
+  }
+
   setTimeout(() => {
     showNextPost();
   }, 800);
@@ -446,7 +451,7 @@ function triggerScreenPulse() {
 
 function createParticleEffect(x, y, count = 15) {
   const container = document.getElementById("game-container");
-  const particles = ["✨", "⭐", "💫", "✦", "+"];
+  const particles = ["✨,⭐,💫,✦,+"];
 
   // Play particle burst sound
   AudioManager.play("particleBurst");
@@ -783,6 +788,12 @@ function handleReaction(iconId, x, y) {
     return;
   }
 
+  // Check loss condition
+  if (gameState.score <= GAME_SCORING.targetScoreLose) {
+    endGame(false);
+    return;
+  }
+
   // Show next post
   setTimeout(() => {
     showNextPost();
@@ -847,50 +858,73 @@ function endGame(won) {
   stopTimer();
   stopPostTimer();
 
-  // Play level complete sound
   if (won) {
+    // Play level complete sound
     AudioManager.play("levelComplete");
-  }
 
-  // Update win screen
-  elements.finalScore.textContent = gameState.score;
-  elements.finalTime.textContent = formatTime(gameState.gameDuration);
-  elements.postsSeen.textContent = gameState.postsSeen;
-  elements.bestStreak.textContent = gameState.bestStreak;
+    // Update win screen
+    elements.finalScore.textContent = gameState.score;
+    elements.finalTime.textContent = formatTime(gameState.gameDuration);
+    elements.postsSeen.textContent = gameState.postsSeen;
+    elements.bestStreak.textContent = gameState.bestStreak;
 
-  // Display icon category statistics
-  if (elements.perfectIconsDisplay) {
-    elements.perfectIconsDisplay.textContent = gameState.perfectIcons;
-  }
-  if (elements.correctIconsDisplay) {
-    elements.correctIconsDisplay.textContent = gameState.correctIcons;
-  }
-  if (elements.neutralIconsDisplay) {
-    elements.neutralIconsDisplay.textContent = gameState.neutralIcons;
-  }
-  if (elements.wrongIconsDisplay) {
-    elements.wrongIconsDisplay.textContent = gameState.wrongIcons;
-  }
-  if (elements.horribleIconsDisplay) {
-    elements.horribleIconsDisplay.textContent = gameState.horribleIcons;
-  }
-
-  // Update title and message based on performance
-  if (won) {
-    if (gameState.bestStreak >= 15) {
-      elements.winTitle.textContent = "🔥 LEGENDARY!";
-      elements.winMessage.textContent = "You are an icon master!";
-    } else if (gameState.bestStreak >= 10) {
-      elements.winTitle.textContent = "⭐ SUPERSTAR!";
-      elements.winMessage.textContent = "Amazing icon matching skills!";
-    } else {
-      elements.winTitle.textContent = "🏆 WINNER!";
-      elements.winMessage.textContent = "You reached the target score!";
+    // Display icon category statistics
+    if (elements.perfectIconsDisplay) {
+      elements.perfectIconsDisplay.textContent = gameState.perfectIcons;
     }
-  }
+    if (elements.correctIconsDisplay) {
+      elements.correctIconsDisplay.textContent = gameState.correctIcons;
+    }
+    if (elements.neutralIconsDisplay) {
+      elements.neutralIconsDisplay.textContent = gameState.neutralIcons;
+    }
+    if (elements.wrongIconsDisplay) {
+      elements.wrongIconsDisplay.textContent = gameState.wrongIcons;
+    }
+    if (elements.horribleIconsDisplay) {
+      elements.horribleIconsDisplay.textContent = gameState.horribleIcons;
+    }
 
-  // Show win screen
-  showScreen(elements.winScreen);
+    // Update title, message, and icon based on performance
+    const winIconImg = document.querySelector(".win-icon-img");
+    if (gameState.bestStreak >= 15) {
+      elements.winTitle.textContent = "LEGENDARY!";
+      elements.winMessage.textContent = "You are an icon master!";
+      if (winIconImg) {
+        winIconImg.src = "images/icon-fire3.png";
+        winIconImg.alt = "Fire";
+      }
+    } else if (gameState.bestStreak >= 10) {
+      elements.winTitle.textContent = "SUPERSTAR!";
+      elements.winMessage.textContent = "Amazing icon matching skills!";
+      if (winIconImg) {
+        winIconImg.src = "images/icon-star.png";
+        winIconImg.alt = "Star";
+      }
+    } else {
+      elements.winTitle.textContent = "WINNER!";
+      elements.winMessage.textContent = "You reached the target score!";
+      if (winIconImg) {
+        winIconImg.src = "images/icon-trophy.png";
+        winIconImg.alt = "Trophy";
+      }
+    }
+
+    // Show win screen
+    showScreen(elements.winScreen);
+  } else {
+    // Play mismatch sound for loss
+    AudioManager.play("mismatch");
+
+    // Update loss screen
+    elements.lossFinalScore.textContent = gameState.score;
+    elements.lossFinalTime.textContent = formatTime(gameState.gameDuration);
+    elements.lossPostsSeen.textContent = gameState.postsSeen;
+    elements.lossBestStreak.textContent = gameState.bestStreak;
+
+    // Show loss screen
+    showScreen(elements.lossScreen);
+  }
 }
 
 function backToMenu() {
@@ -971,6 +1005,10 @@ function setupControls() {
   // Win screen buttons
   elements.playAgainBtn.addEventListener("click", startGame);
   elements.backToMenuBtn.addEventListener("click", backToMenu);
+
+  // Loss screen buttons
+  elements.tryAgainBtn.addEventListener("click", startGame);
+  elements.lossBackToMenuBtn.addEventListener("click", backToMenu);
 
   // Unified audio button (if it exists)
   const audioBtn = document.getElementById("audio-btn");
@@ -1068,6 +1106,7 @@ async function init() {
   elements.startScreen = document.getElementById("start-screen");
   elements.gameScreen = document.getElementById("game-screen");
   elements.winScreen = document.getElementById("win-screen");
+  elements.lossScreen = document.getElementById("loss-screen");
   elements.howToPlayModal = document.getElementById("how-to-play-modal");
   elements.startBtn = document.getElementById("start-btn");
   elements.howToPlayBtn = document.getElementById("how-to-play-btn");
@@ -1097,6 +1136,12 @@ async function init() {
   elements.horribleIconsDisplay = document.getElementById("horrible-icons");
   elements.playAgainBtn = document.getElementById("play-again-btn");
   elements.backToMenuBtn = document.getElementById("back-to-menu-btn");
+  elements.lossFinalScore = document.getElementById("loss-final-score");
+  elements.lossFinalTime = document.getElementById("loss-final-time");
+  elements.lossPostsSeen = document.getElementById("loss-posts-seen");
+  elements.lossBestStreak = document.getElementById("loss-best-streak");
+  elements.tryAgainBtn = document.getElementById("try-again-btn");
+  elements.lossBackToMenuBtn = document.getElementById("loss-back-to-menu-btn");
   elements.postTimer = document.getElementById("post-timer");
   elements.postTimerFill = document.getElementById("post-timer-fill");
   elements.postTimerText = document.getElementById("post-timer-text");

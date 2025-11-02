@@ -5,6 +5,7 @@ const ScreenLoader = {
         start: 'start-screen.html',
         game: 'game-screen.html',
         win: 'win-screen.html',
+        loss: 'loss-screen.html',
         howToPlay: 'how-to-play.html'
     },
 

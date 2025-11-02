@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Icon Category Counter</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      #upload-section {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      #file-input {
+        margin: 10px;
+      }
+      #analyze-btn {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      #analyze-btn:hover {
+        background-color: #0056b3;
+      }
+      #results {
+        display: none;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        background-color: white;
+      }
+      th,
+      td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: center;
+      }
+      th {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        user-select: none;
+      }
+      th:hover {
+        background-color: #0056b3;
+      }
+      th.sort-asc::after {
+        content: " ▲";
+      }
+      th.sort-desc::after {
+        content: " ▼";
+      }
+      tr:nth-child(even) {
+        background-color: #f2f2f2;
+      }
+      .total-row {
+        font-weight: bold;
+        background-color: #e9ecef;
+      }
+      .zero-cell {
+        background-color: #f44336 !important; /* Punchy red */
+        color: white !important;
+        font-weight: bold;
+      }
+      .low-cell {
+        background-color: #ff9800 !important; /* Punchy orange */
+        color: white !important;
+        font-weight: bold;
+      }
+      .medium-cell {
+        background-color: #2196f3 !important; /* Punchy blue */
+        color: white !important;
+        font-weight: bold;
+      }
+      .high-cell {
+        background-color: #4caf50 !important; /* Punchy green */
+        color: white !important;
+        font-weight: bold;
+      }
+      #error {
+        color: red;
+        text-align: center;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Icon Category Counter</h1>
+    <div id="upload-section">
+      <input type="file" id="file-input" accept=".js" />
+      <br />
+      <button id="analyze-btn">Analyze File</button>
+    </div>
+    <div id="error"></div>
+    <div id="results">
+      <table id="count-table">
+        <thead>
+          <tr>
+            <th data-sort="name">Icon Name</th>
+            <th data-sort="id">Icon ID</th>
+            <th data-sort="perfect">Perfect</th>
+            <th data-sort="correct">Correct</th>
+            <th data-sort="neutral">Neutral</th>
+            <th data-sort="wrong">Wrong</th>
+            <th data-sort="horrible">Horrible</th>
+            <th data-sort="total">Total</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+        <tfoot id="table-foot"></tfoot>
+      </table>
+    </div>
+
+    <script>
+      const fileInput = document.getElementById("file-input");
+      const analyzeBtn = document.getElementById("analyze-btn");
+      const results = document.getElementById("results");
+      const errorDiv = document.getElementById("error");
+      const tableBody = document.getElementById("table-body");
+      const tableFoot = document.getElementById("table-foot");
+      const table = document.getElementById("count-table");
+
+      let allIconsData = []; // To store data for sorting
+
+      function getCellClass(value) {
+        const num = parseInt(value);
+        if (num === 0) return "zero-cell";
+        if (num <= 1) return "low-cell";
+        if (num <= 3) return "medium-cell";
+        return "high-cell";
+      }
+
+      function buildTable(allIcons, categoryTotals) {
+        tableBody.innerHTML = "";
+        allIcons.forEach(({ id, name, total, rowCounts }) => {
+          const tr = document.createElement("tr");
+
+          // Icon name td
+          const nameTd = document.createElement("td");
+          nameTd.textContent = name;
+          tr.appendChild(nameTd);
+
+          // Icon ID td
+          const idTd = document.createElement("td");
+          idTd.textContent = id;
+          tr.appendChild(idTd);
+
+          // Category count tds
+          ["perfect,correct,neutral,wrong,horrible"].forEach((cat) => {
+            const td = document.createElement("td");
+            td.textContent = rowCounts[cat];
+            td.className = getCellClass(td.textContent);
+            tr.appendChild(td);
+          });
+
+          // Total td
+          const totalTd = document.createElement("td");
+          totalTd.textContent = total;
+          totalTd.className = getCellClass(total);
+          tr.appendChild(totalTd);
+
+          tableBody.appendChild(tr);
+        });
+
+        // Totals row
+        const totalRow = document.createElement("tr");
+        totalRow.className = "total-row";
+
+        // First td colspan 2
+        const firstTd = document.createElement("td");
+        firstTd.colSpan = 2;
+        firstTd.textContent = "Total";
+        totalRow.appendChild(firstTd);
+
+        // Category totals tds
+        ["perfect,correct,neutral,wrong,horrible"].forEach((cat) => {
+          const td = document.createElement("td");
+          td.textContent = categoryTotals[cat];
+          td.className = getCellClass(td.textContent);
+          totalRow.appendChild(td);
+        });
+
+        // Grand total td
+        const grandTotal = allIcons.reduce((sum, { total }) => sum + total, 0);
+        const grandTd = document.createElement("td");
+        grandTd.textContent = grandTotal;
+        grandTd.className = getCellClass(grandTotal);
+        totalRow.appendChild(grandTd);
+
+        tableFoot.innerHTML = "";
+        tableFoot.appendChild(totalRow);
+      }
+
+      function sortTable(column, direction) {
+        allIconsData.sort((a, b) => {
+          let valA, valB;
+          if (column === "name") {
+            valA = a.name.toLowerCase();
+            valB = b.name.toLowerCase();
+          } else if (column === "id") {
+            valA = a.id.toLowerCase();
+            valB = b.id.toLowerCase();
+          } else if (column === "total") {
+            valA = a.total;
+            valB = b.total;
+          } else {
+            valA = a.rowCounts[column];
+            valB = b.rowCounts[column];
+          }
+          if (valA < valB) return direction === "asc" ? -1 : 1;
+          if (valA > valB) return direction === "asc" ? 1 : -1;
+          return 0;
+        });
+        buildTable(allIconsData, categoryTotals); // Rebuild with sorted data
+      }
+
+      let categoryTotals = {}; // Global for sorting
+
+      // Add sorting event listeners
+      table.addEventListener("click", (e) => {
+        if (e.target.tagName === "TH" && e.target.dataset.sort) {
+          const column = e.target.dataset.sort;
+          const currentDir = e.target.classList.contains("sort-asc")
+            ? "asc"
+            : "desc";
+          const newDir = currentDir === "asc" ? "desc" : "asc";
+
+          // Remove sort classes from all th
+          Array.from(table.querySelectorAll("th")).forEach((th) => {
+            th.classList.remove("sort-asc,sort-desc");
+          });
+
+          // Add new class
+          e.target.classList.add(`sort-${newDir}`);
+
+          sortTable(column, newDir);
+        }
+      });
+
+      analyzeBtn.addEventListener("click", () => {
+        const file = fileInput.files[0];
+        if (!file) {
+          showError("Please select a file first.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            // Use new Function to execute the code and return the needed variables
+            const code =
+              e.target.result + "\nreturn { GAME_ICONS, GAME_MESSAGES };";
+            const result = new Function(code)();
+
+            const { GAME_ICONS, GAME_MESSAGES } = result;
+
+            if (!GAME_MESSAGES || !Array.isArray(GAME_MESSAGES)) {
+              throw new Error("GAME_MESSAGES not found or invalid.");
+            }
+            if (!GAME_ICONS || !Array.isArray(GAME_ICONS)) {
+              throw new Error("GAME_ICONS not found or invalid.");
+            }
+
+            // Initialize counts for all icons
+            const counts = {};
+            GAME_ICONS.forEach((icon) => {
+              const id = icon.id;
+              counts[id] = {
+                perfect: 0,
+                correct: 0,
+                neutral: 0,
+                wrong: 0,
+                horrible: 0,
+                total: 0,
+              };
+            });
+
+            categoryTotals = {
+              perfect: 0,
+              correct: 0,
+              neutral: 0,
+              wrong: 0,
+              horrible: 0,
+            };
+
+            GAME_MESSAGES.forEach((message) => {
+              const categories = [
+                "perfectIcons",
+                "correctIcons",
+                "neutralIcons",
+                "wrongIcons",
+                "horribleIcons",
+              ];
+              categories.forEach((cat) => {
+                if (message[cat]) {
+                  message[cat].forEach((iconId) => {
+                    if (counts[iconId]) {
+                      // Safety check
+                      const catKey = cat.replace("Icons,");
+                      counts[iconId][catKey]++;
+                      counts[iconId].total++;
+                      categoryTotals[catKey]++;
+                    }
+                  });
+                }
+              });
+            });
+
+            // Prepare data for sorting
+            allIconsData = GAME_ICONS.map((icon) => ({
+              id: icon.id,
+              name: icon.name,
+              total: counts[icon.id].total,
+              rowCounts: counts[icon.id],
+            })).sort((a, b) => a.total - b.total); // Initial sort by total asc
+
+            // Initial build
+            buildTable(allIconsData, categoryTotals);
+
+            // Clear sort indicators
+            Array.from(table.querySelectorAll("th")).forEach((th) => {
+              th.classList.remove("sort-asc,sort-desc");
+            });
+            // Set initial sort on total desc or something, but for now asc
+
+            results.style.display = "block";
+            errorDiv.textContent = "";
+          } catch (err) {
+            showError(`Error processing file: ${err.message}`);
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      function showError(msg) {
+        errorDiv.textContent = msg;
+        results.style.display = "none";
+      }
+    </script>
+  </body>
+</html>
