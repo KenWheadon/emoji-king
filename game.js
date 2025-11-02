@@ -2,6 +2,137 @@
 const allIcons = GAME_ICONS;
 const postTemplates = GAME_MESSAGES;
 
+// Audio Manager
+const AudioManager = {
+  sounds: {},
+  bgMusic: null,
+  muted: false,
+  musicMuted: false,
+
+  init() {
+    // Preload all audio files
+    this.sounds = {
+      buttonClick: new Audio("audio/button-click.mp3"),
+      buttonHover: new Audio("audio/button-hover.mp3"),
+      click: new Audio("audio/click.mp3"),
+      collected: new Audio("audio/collected.mp3"),
+      hit: new Audio("audio/hit.mp3"),
+      levelComplete: new Audio("audio/level-complete.mp3"),
+      match: new Audio("audio/match.mp3"),
+      mismatch: new Audio("audio/mismatch.mp3"),
+      particleBurst: new Audio("audio/particle-burst.mp3"),
+      pointsGained: new Audio("audio/points-gained.mp3"),
+      screenShake: new Audio("audio/screen-shake.mp3"),
+      timeWarning: new Audio("audio/time-warning.mp3"),
+    };
+
+    // Set up background music
+    this.bgMusic = new Audio("audio/dark-cute-neon-revolt.mp3");
+    this.bgMusic.loop = true;
+    this.bgMusic.volume = 0.6; // Lower volume for background music
+
+    // Set volume levels for all sounds
+    Object.values(this.sounds).forEach((sound) => {
+      sound.volume = 0.5;
+    });
+
+    // Check for saved mute preferences
+    const savedMute = localStorage.getItem("audioMuted");
+    if (savedMute === "true") {
+      this.muted = true;
+    }
+
+    const savedMusicMute = localStorage.getItem("musicMuted");
+    if (savedMusicMute === "true") {
+      this.musicMuted = true;
+    }
+  },
+
+  play(soundName) {
+    if (this.muted) return;
+
+    const sound = this.sounds[soundName];
+    if (sound) {
+      // Clone and play to allow overlapping sounds
+      const soundClone = sound.cloneNode();
+      soundClone.volume = sound.volume;
+      soundClone.play().catch((err) => {
+        // Silently handle autoplay restrictions
+        console.log("Audio playback prevented:", err);
+      });
+    }
+  },
+
+  playMusic() {
+    if (this.musicMuted || !this.bgMusic) return;
+
+    this.bgMusic.play().catch((err) => {
+      console.log("Music playback prevented:", err);
+    });
+  },
+
+  pauseMusic() {
+    if (this.bgMusic) {
+      this.bgMusic.pause();
+    }
+  },
+
+  stopMusic() {
+    if (this.bgMusic) {
+      this.bgMusic.pause();
+      this.bgMusic.currentTime = 0;
+    }
+  },
+
+  toggleMute() {
+    this.muted = !this.muted;
+    localStorage.setItem("audioMuted", this.muted);
+    return this.muted;
+  },
+
+  toggleMusic() {
+    this.musicMuted = !this.musicMuted;
+    localStorage.setItem("musicMuted", this.musicMuted);
+
+    if (this.musicMuted) {
+      this.pauseMusic();
+    } else {
+      this.playMusic();
+    }
+
+    return this.musicMuted;
+  },
+
+  toggleAll() {
+    // Toggle both muted and musicMuted to the same state
+    const newState = !this.muted; // Use muted as the primary state
+    this.muted = newState;
+    this.musicMuted = newState;
+    localStorage.setItem("audioMuted", this.muted);
+    localStorage.setItem("musicMuted", this.musicMuted);
+
+    if (this.musicMuted) {
+      this.pauseMusic();
+    } else {
+      this.playMusic();
+    }
+
+    return this.muted;
+  },
+
+  setVolume(soundName, volume) {
+    if (this.sounds[soundName]) {
+      this.sounds[soundName].volume = Math.max(0, Math.min(1, volume));
+    }
+  },
+
+  setMusicVolume(volume) {
+    if (this.bgMusic) {
+      this.bgMusic.volume = Math.max(0, Math.min(1, volume));
+    }
+  },
+};
+
 // Game State
 const gameState = {
   score: 0,
@@ -144,6 +275,11 @@ function updatePostTimerUI() {
     elements.postTimerFill.classList.remove("warning");
     elements.postTimerText.classList.add("critical");
     elements.postTimerText.classList.remove("warning");
+    // Play warning sound when entering critical zone (only once)
+    if (!gameState.criticalSoundPlayed) {
+      AudioManager.play("timeWarning");
+      gameState.criticalSoundPlayed = true;
+    }
   } else if (percentage <= 40) {
     elements.postTimerFill.classList.add("warning");
     elements.postTimerFill.classList.remove("critical");
@@ -173,6 +309,9 @@ function handlePostTimeout() {
 
   // Add timeout class to post for shake animation
   post.element.classList.add("timeout");
+
+  // Play mismatch sound for timeout
+  AudioManager.play("mismatch");
 
   // Show feedback
   showFeedback(`Time's Up! ${GAME_SCORING.timeoutPenalty}`, false);
@@ -266,7 +405,9 @@ function showFeedback(text, isPositive) {
     const currentOffset = parseInt(existing.dataset.offset || "0");
     const newOffset = currentOffset + 1;
     existing.dataset.offset = newOffset;
-    existing.style.transform = `translate(-50%, calc(-50% - ${newOffset * 80}px))`;
+    existing.style.transform = `translate(-50%, calc(-50% - ${
+      newOffset * 80
+    }px))`;
   });
 
   // Set initial offset for new feedback
@@ -286,6 +427,9 @@ function triggerScreenShake() {
   const container = document.getElementById("game-container");
   container.classList.add("shake");
 
+  // Play screen shake sound
+  AudioManager.play("screenShake");
+
   setTimeout(() => {
     container.classList.remove("shake");
   }, 500);
@@ -303,6 +447,9 @@ function triggerScreenPulse() {
 function createParticleEffect(x, y, count = 15) {
   const container = document.getElementById("game-container");
   const particles = ["✨", "⭐", "💫", "✦", "+"];
+
+  // Play particle burst sound
+  AudioManager.play("particleBurst");
 
   // Get container position to convert viewport coordinates to container-relative coordinates
   const containerRect = container.getBoundingClientRect();
@@ -398,6 +545,11 @@ function updateReactionBar(iconChoices) {
     btn.appendChild(img);
     btn.appendChild(hint);
 
+    // Add hover sound
+    btn.addEventListener("mouseenter", () => {
+      AudioManager.play("buttonHover");
+    });
+
     // Create named handler for cleanup
     const clickHandler = () => {
       const rect = btn.getBoundingClientRect();
@@ -415,6 +567,9 @@ function updateReactionBar(iconChoices) {
 function showNextPost() {
   // Clean up old posts to prevent DOM accumulation
   cleanupOldPosts();
+
+  // Reset critical sound flag for new post
+  gameState.criticalSoundPlayed = false;
 
   const postData = getRandomPost();
 
@@ -579,6 +734,9 @@ function handleReaction(iconId, x, y) {
     if (timeBonus > 0) feedbackText += ` ⚡`;
     if (multiplier > 1) feedbackText += ` ×${multiplier}`;
     showFeedback(feedbackText, true);
+    // Play match sound and points gained for perfect
+    AudioManager.play("match");
+    AudioManager.play("pointsGained");
     // Trigger particle effect and screen pulse for perfect
     if (x !== undefined && y !== undefined) {
       createParticleEffect(x, y, 20);
@@ -590,6 +748,8 @@ function handleReaction(iconId, x, y) {
     if (timeBonus > 0) feedbackText += ` ⚡`;
     if (multiplier > 1) feedbackText += ` ×${multiplier}`;
     showFeedback(feedbackText, true);
+    // Play collected sound for correct
+    AudioManager.play("collected");
     // Trigger particle effect and screen pulse for correct
     if (x !== undefined && y !== undefined) {
       createParticleEffect(x, y, 12);
@@ -597,14 +757,20 @@ function handleReaction(iconId, x, y) {
     triggerScreenPulse();
   } else if (categoryName === "neutral") {
     showFeedback("Not quite", false);
+    // Play click sound for neutral
+    AudioManager.play("click");
   } else if (categoryName === "wrong") {
     post.element.classList.add("incorrect");
     showFeedback(`Bad ${totalPoints}`, false);
+    // Play hit sound for wrong
+    AudioManager.play("hit");
     // Trigger screen shake for wrong
     triggerScreenShake();
   } else if (categoryName === "horrible") {
     post.element.classList.add("incorrect");
     showFeedback(`Terrible ${totalPoints}`, false);
+    // Play mismatch sound for horrible
+    AudioManager.play("mismatch");
     // Trigger stronger screen shake for horrible
     triggerScreenShake();
   }
@@ -629,7 +795,7 @@ function cleanupOldPosts() {
   // Keep only the last 10 posts to prevent memory issues
   if (posts.length > 10) {
     const postsToRemove = Array.from(posts).slice(0, posts.length - 10);
-    postsToRemove.forEach(post => post.remove());
+    postsToRemove.forEach((post) => post.remove());
   }
 }
 
@@ -655,9 +821,13 @@ function startGame() {
   gameState.isPlaying = true;
   gameState.currentPost = null;
   gameState.messageQueue = []; // Reset message queue for fresh shuffle
+  gameState.criticalSoundPlayed = false;
 
   // Clear feed
   elements.feed.innerHTML = "";
+
+  // Start background music
+  AudioManager.playMusic();
 
   // Show game screen
   showScreen(elements.gameScreen);
@@ -676,6 +846,11 @@ function endGame(won) {
   gameState.isPlaying = false;
   stopTimer();
   stopPostTimer();
+
+  // Play level complete sound
+  if (won) {
+    AudioManager.play("levelComplete");
+  }
 
   // Update win screen
   elements.finalScore.textContent = gameState.score;
@@ -725,6 +900,9 @@ function backToMenu() {
   }
   stopPostTimer();
 
+  // Pause background music when returning to menu
+  AudioManager.pauseMusic();
+
   // Reset game state
   gameState.isPlaying = false;
 
@@ -732,17 +910,56 @@ function backToMenu() {
   showScreen(elements.startScreen);
 }
 
+// Add hover and click sounds to all buttons
+function addButtonSounds() {
+  // Get all buttons with these classes
+  const buttons = document.querySelectorAll(
+    ".big-btn, .mute-btn, .emoji-btn, .modal-close"
+  );
+
+  buttons.forEach((button) => {
+    // Add hover sound
+    button.addEventListener("mouseenter", () => {
+      AudioManager.play("buttonHover");
+    });
+
+    // Add click sound (for non-game buttons)
+    if (!button.classList.contains("emoji-btn")) {
+      button.addEventListener("click", () => {
+        AudioManager.play("buttonClick");
+        // Try to play music if not already playing
+        if (
+          AudioManager.bgMusic &&
+          AudioManager.bgMusic.paused &&
+          !AudioManager.musicMuted
+        ) {
+          AudioManager.playMusic();
+        }
+      });
+    }
+  });
+}
+
 // Input Handling
 function setupControls() {
+  // Add hover and click sounds to all buttons
+  addButtonSounds();
+
   // Start button
   elements.startBtn.addEventListener("click", startGame);
 
   // How to play button
-  elements.howToPlayBtn.addEventListener("click", showModal);
+  elements.howToPlayBtn.addEventListener("click", () => {
+    showModal();
+  });
 
   // Modal close buttons
-  elements.closeModal.addEventListener("click", hideModal);
-  elements.closeModalBtn.addEventListener("click", hideModal);
+  elements.closeModal.addEventListener("click", () => {
+    hideModal();
+  });
+  elements.closeModalBtn.addEventListener("click", () => {
+    hideModal();
+  });
 
   // Modal backdrop click - safely attach listener
   const modalBackdrop =
@@ -754,6 +971,16 @@ function setupControls() {
   // Win screen buttons
   elements.playAgainBtn.addEventListener("click", startGame);
   elements.backToMenuBtn.addEventListener("click", backToMenu);
+
+  // Unified audio button (if it exists)
+  const audioBtn = document.getElementById("audio-btn");
+  if (audioBtn) {
+    updateAudioButton(audioBtn);
+    audioBtn.addEventListener("click", () => {
+      const isMuted = AudioManager.toggleAll();
+      updateAudioButton(audioBtn);
+    });
+  }
 
   // Keyboard controls for game - store reference for cleanup
   gameState.keydownHandler = (e) => {
@@ -776,6 +1003,21 @@ function setupControls() {
   };
 
   document.addEventListener("keydown", gameState.keydownHandler);
+}
+
+function updateAudioButton(audioBtn) {
+  if (!audioBtn) return;
+
+  const img = audioBtn.querySelector("img");
+  if (!img) return;
+
+  if (AudioManager.muted) {
+    img.style.opacity = "0.3";
+    audioBtn.title = "Unmute Audio";
+  } else {
+    img.style.opacity = "1";
+    audioBtn.title = "Mute Audio";
+  }
 }
 
 // Set viewport height CSS variable for better mobile support
@@ -871,6 +1113,12 @@ async function init() {
   if (elements.totalMessages) {
     elements.totalMessages.textContent = `${postTemplates.length}`;
   }
+
+  // Initialize audio manager
+  AudioManager.init();
+
+  // Try to start background music on start screen
+  AudioManager.playMusic();
 
   // Setup controls
   setupControls();

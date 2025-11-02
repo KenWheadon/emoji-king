@@ -1440,3 +1440,41 @@ body {
     padding: var(--spacing-md);
   }
 }
+
+/* ===== MUTE BUTTON ===== */
+.mute-btn {
+  background: var(--secondary-accent);
+  border: 4px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 0.5rem 0.8rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 4px 4px 0 var(--border-color);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.mute-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--border-color);
+  background: var(--primary-accent);
+}
+
+.mute-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: none;
+}
+
+@media (max-width: 480px) {
+  .mute-btn {
+    padding: 0.4rem 0.6rem;
+    font-size: 1.2rem;
+    border: 3px solid var(--border-color);
+  }
+}
