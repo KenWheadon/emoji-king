@@ -440,8 +440,8 @@ function showNextPost() {
     iconChoices = [...iconChoices, ...additionalIcons];
   }
 
-  // Shuffle
-  iconChoices = iconChoices.sort(() => Math.random() - 0.5);
+  // Shuffle using proper Fisher-Yates algorithm
+  iconChoices = shuffleArray(iconChoices);
 
   gameState.currentPost = {
     data: postData,
