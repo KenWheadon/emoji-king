@@ -135,6 +135,7 @@
       const table = document.getElementById("count-table");
 
       let allIconsData = []; // To store data for sorting
+      let categoryTotals = {}; // Global for sorting
 
       function getCellClass(value) {
         const num = parseInt(value);
@@ -160,12 +161,14 @@
           tr.appendChild(idTd);
 
           // Category count tds
-          ["perfect,correct,neutral,wrong,horrible"].forEach((cat) => {
-            const td = document.createElement("td");
-            td.textContent = rowCounts[cat];
-            td.className = getCellClass(td.textContent);
-            tr.appendChild(td);
-          });
+          ["perfect", "correct", "neutral", "wrong", "horrible"].forEach(
+            (cat) => {
+              const td = document.createElement("td");
+              td.textContent = rowCounts[cat];
+              td.className = getCellClass(td.textContent);
+              tr.appendChild(td);
+            }
+          );
 
           // Total td
           const totalTd = document.createElement("td");
@@ -187,12 +190,14 @@
         totalRow.appendChild(firstTd);
 
         // Category totals tds
-        ["perfect,correct,neutral,wrong,horrible"].forEach((cat) => {
-          const td = document.createElement("td");
-          td.textContent = categoryTotals[cat];
-          td.className = getCellClass(td.textContent);
-          totalRow.appendChild(td);
-        });
+        ["perfect", "correct", "neutral", "wrong", "horrible"].forEach(
+          (cat) => {
+            const td = document.createElement("td");
+            td.textContent = categoryTotals[cat];
+            td.className = getCellClass(td.textContent);
+            totalRow.appendChild(td);
+          }
+        );
 
         // Grand total td
         const grandTotal = allIcons.reduce((sum, { total }) => sum + total, 0);
@@ -225,10 +230,8 @@
           if (valA > valB) return direction === "asc" ? 1 : -1;
           return 0;
         });
-        buildTable(allIconsData, categoryTotals); // Rebuild with sorted data
+        buildTable(allIconsData, categoryTotals);
       }
-
-      let categoryTotals = {}; // Global for sorting
 
       // Add sorting event listeners
       table.addEventListener("click", (e) => {
@@ -241,7 +244,7 @@
 
           // Remove sort classes from all th
           Array.from(table.querySelectorAll("th")).forEach((th) => {
-            th.classList.remove("sort-asc,sort-desc");
+            th.classList.remove("sort-asc", "sort-desc");
           });
 
           // Add new class
@@ -261,25 +264,66 @@
         const reader = new FileReader();
         reader.onload = (e) => {
           try {
-            // Use new Function to execute the code and return the needed variables
-            const code =
-              e.target.result + "\nreturn { GAME_ICONS, GAME_MESSAGES };";
-            const result = new Function(code)();
+            const text = e.target.result;
 
-            const { GAME_ICONS, GAME_MESSAGES } = result;
-
-            if (!GAME_MESSAGES || !Array.isArray(GAME_MESSAGES)) {
-              throw new Error("GAME_MESSAGES not found or invalid.");
+            // Parse ICON map
+            const iconMatch = text.match(/const\s+ICON\s*=\s*\{([\s\S]*?)\};/);
+            if (!iconMatch) throw new Error("ICON not found");
+            const iconBody = iconMatch[1];
+            const iconMap = {};
+            const keyValueMatches = iconBody.match(/(\w+):\s*"(\w+)"/g);
+            if (keyValueMatches) {
+              keyValueMatches.forEach((kv) => {
+                const match = kv.match(/(\w+):\s*"(\w+)"/);
+                if (match) {
+                  iconMap[match[1]] = match[2];
+                }
+              });
             }
-            if (!GAME_ICONS || !Array.isArray(GAME_ICONS)) {
-              throw new Error("GAME_ICONS not found or invalid.");
-            }
 
-            // Initialize counts for all icons
+            // Parse GAME_ICONS
+            const iconsMatch = text.match(
+              /const\s+GAME_ICONS\s*=\s*\[([\s\S]*?)\];/
+            );
+            if (!iconsMatch) throw new Error("GAME_ICONS not found");
+            const iconsBody = iconsMatch[1];
+            const iconObjects = iconsBody
+              .split("},")
+              .map((s) => s.trim() + "}")
+              .filter(Boolean);
+            const gameIcons = [];
+            const idToName = {};
+            iconObjects.forEach((objStr) => {
+              const idMatch = objStr.match(/id:\s*ICON\.(\w+)/);
+              const nameMatch = objStr.match(/name:\s*"([^"]*)"/);
+              if (idMatch && nameMatch) {
+                const key = idMatch[1];
+                const id = iconMap[key];
+                const name = nameMatch[1].trim();
+                if (id && name) {
+                  gameIcons.push({ id, name });
+                  idToName[id] = name;
+                }
+              }
+            });
+            if (gameIcons.length === 0)
+              throw new Error("No valid icons parsed");
+
+            // Parse GAME_MESSAGES
+            const messagesMatch = text.match(
+              /const\s+GAME_MESSAGES\s*=\s*\[([\s\S]*?)\];/
+            );
+            if (!messagesMatch) throw new Error("GAME_MESSAGES not found");
+            const messagesBody = messagesMatch[1];
+            const messageObjects = messagesBody
+              .split("},")
+              .map((s) => s.trim() + "}")
+              .filter(Boolean);
+
+            // Initialize counts
             const counts = {};
-            GAME_ICONS.forEach((icon) => {
-              const id = icon.id;
-              counts[id] = {
+            gameIcons.forEach((icon) => {
+              counts[icon.id] = {
                 perfect: 0,
                 correct: 0,
                 neutral: 0,
@@ -297,7 +341,8 @@
               horrible: 0,
             };
 
-            GAME_MESSAGES.forEach((message) => {
+            // Process each message
+            messageObjects.forEach((msgStr) => {
               const categories = [
                 "perfectIcons",
                 "correctIcons",
@@ -306,36 +351,48 @@
                 "horribleIcons",
               ];
               categories.forEach((cat) => {
-                if (message[cat]) {
-                  message[cat].forEach((iconId) => {
-                    if (counts[iconId]) {
-                      // Safety check
-                      const catKey = cat.replace("Icons,");
-                      counts[iconId][catKey]++;
-                      counts[iconId].total++;
-                      categoryTotals[catKey]++;
-                    }
-                  });
+                const arrayMatch = msgStr.match(
+                  new RegExp(cat + "\\s*:\\s*\\[" + "([^" + "\\]]+)\\]")
+                );
+                if (arrayMatch) {
+                  const arrayContent = arrayMatch[1];
+                  const iconRefs = arrayContent.match(/ICON\.(\w+)/g);
+                  if (iconRefs) {
+                    iconRefs.forEach((ref) => {
+                      const keyMatch = ref.match(/ICON\.(\w+)/);
+                      if (keyMatch) {
+                        const key = keyMatch[1];
+                        const iconId = iconMap[key];
+                        if (iconId && counts[iconId]) {
+                          const catKey = cat.replace("Icons", "");
+                          counts[iconId][catKey]++;
+                          counts[iconId].total++;
+                          categoryTotals[catKey]++;
+                        }
+                      }
+                    });
+                  }
                 }
               });
             });
 
             // Prepare data for sorting
-            allIconsData = GAME_ICONS.map((icon) => ({
-              id: icon.id,
-              name: icon.name,
-              total: counts[icon.id].total,
-              rowCounts: counts[icon.id],
-            })).sort((a, b) => a.total - b.total); // Initial sort by total asc
+            allIconsData = gameIcons
+              .map((icon) => ({
+                id: icon.id,
+                name: idToName[icon.id] || icon.id,
+                total: counts[icon.id].total,
+                rowCounts: counts[icon.id],
+              }))
+              .sort((a, b) => a.total - b.total); // Initial sort by total asc
 
             // Initial build
             buildTable(allIconsData, categoryTotals);
 
             // Clear sort indicators
             Array.from(table.querySelectorAll("th")).forEach((th) => {
-              th.classList.remove("sort-asc,sort-desc");
+              th.classList.remove("sort-asc", "sort-desc");
             });
-            // Set initial sort on total desc or something, but for now asc
 
             results.style.display = "block";
             errorDiv.textContent = "";

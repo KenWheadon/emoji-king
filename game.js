@@ -221,13 +221,13 @@ function formatTime(ms) {
 // Get dynamic post time limit based on score
 function getPostTimeLimit() {
   if (gameState.score < 26) {
-    return 10000; // 10 seconds for under 25 points
+    return GAME_SCORING.postTimeLimit; // 10 seconds for under 25 points
   } else if (gameState.score < 51) {
-    return 8000; // 8 seconds for 26-50 points
+    return GAME_SCORING.postTimeLimit * 0.8; // 8 seconds for 26-50 points
   } else if (gameState.score < 76) {
-    return 6000; // 6 seconds for 51-75 points
+    return GAME_SCORING.postTimeLimit * 0.6; // 6 seconds for 51-75 points
   } else {
-    return 5000; // 5 seconds for 76+ points
+    return GAME_SCORING.postTimeLimit * 0.5; // 5 seconds for 76+ points
   }
 }
 
@@ -578,45 +578,29 @@ function showNextPost() {
 
   const postData = getRandomPost();
 
-  // Create icon choices: mix of all 5 categories
-  // Typically include 1-2 perfect/correct, and a mix of neutral/wrong/horrible
-  const perfectCount = Math.random() > 0.7 ? 1 : 0; // 30% chance for 1 perfect
+  // Create icon choices: use ONLY the icons explicitly configured in game-config
+  // Get all available icons from each category for this message
   const perfectIcons = (postData.perfectIcons || [])
-    .sort(() => Math.random() - 0.5)
-    .slice(0, perfectCount)
     .map((id) => getIconById(id))
     .filter((icon) => icon);
 
-  const correctCount = Math.random() > 0.5 ? 1 : 2;
   const correctIcons = (postData.correctIcons || [])
-    .sort(() => Math.random() - 0.5)
-    .slice(0, correctCount)
     .map((id) => getIconById(id))
     .filter((icon) => icon);
 
-  const neutralCount = Math.floor(Math.random() * 2); // 0-1 neutral
   const neutralIcons = (postData.neutralIcons || [])
-    .sort(() => Math.random() - 0.5)
-    .slice(0, neutralCount)
     .map((id) => getIconById(id))
     .filter((icon) => icon);
-
-  const remainingSlots = 6 - perfectCount - correctCount - neutralCount;
-  const wrongCount = Math.floor(remainingSlots / 2);
-  const horribleCount = remainingSlots - wrongCount;
 
   const wrongIcons = (postData.wrongIcons || [])
-    .sort(() => Math.random() - 0.5)
-    .slice(0, wrongCount)
     .map((id) => getIconById(id))
     .filter((icon) => icon);
 
   const horribleIcons = (postData.horribleIcons || [])
-    .sort(() => Math.random() - 0.5)
-    .slice(0, horribleCount)
     .map((id) => getIconById(id))
     .filter((icon) => icon);
 
+  // Combine all configured icons for this message
   let iconChoices = [
     ...perfectIcons,
     ...correctIcons,
@@ -625,11 +609,13 @@ function showNextPost() {
     ...horribleIcons,
   ];
 
-  // If we don't have 6 yet, fill with random
-  if (iconChoices.length < 6) {
-    const existingIds = iconChoices.map((i) => i.id);
-    const additionalIcons = getRandomIcons(6 - iconChoices.length, existingIds);
-    iconChoices = [...iconChoices, ...additionalIcons];
+  // Warn if message doesn't have exactly 6 icons configured
+  if (iconChoices.length !== 6) {
+    console.warn(
+      `Message "${postData.text.substring(0, 50)}..." has ${
+        iconChoices.length
+      } icons configured (expected 6)`
+    );
   }
 
   // Shuffle using proper Fisher-Yates algorithm
