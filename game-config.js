@@ -193,7 +193,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.STAR],
   },
   {
-    text: "Kitchen experiment reached its final form. I'm not getting the damage depoist back.",
+    text: "Kitchen experiment reached its final form. I'm not getting the damage deposit back.",
     perfectIcons: [ICON.HOUSEFIRE],
     correctIcons: [ICON.FIRE],
     neutralIcons: [ICON.SPARKLES, ICON.GLASS],
@@ -281,7 +281,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.MOUSE],
   },
   {
-    text: "Coffee stayed hot all day - not suprised.",
+    text: "Coffee stayed hot all day - not surprised.",
     perfectIcons: [ICON.HOUSEFIRE],
     correctIcons: [ICON.DEMON],
     neutralIcons: [ICON.SPARKLES, ICON.STAR],
@@ -313,7 +313,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.STAR],
   },
   {
-    text: "These monsters really are pocket sized!",
+    text: "These monsters really are pocket-sized!",
     perfectIcons: [ICON.POKE],
     correctIcons: [ICON.EGG],
     neutralIcons: [ICON.GOLDENSNAPPY, ICON.MISMATCHSOCK],
@@ -577,7 +577,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.DEMON],
   },
   {
-    text: "My glass is half empty. Soon is will be completely empty. I'm so thirsty.",
+    text: "My glass is half empty. Soon it will be completely empty. I'm so thirsty.",
     perfectIcons: [ICON.GLASS],
     correctIcons: [ICON.SUNDIAL],
     neutralIcons: [ICON.RECORD, ICON.TV],
@@ -601,7 +601,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.SUNDIAL],
   },
   {
-    text: "My time management hack has gotten be several awards.",
+    text: "My time management hack has gotten me several awards.",
     perfectIcons: [ICON.STOPWATCH],
     correctIcons: [ICON.MEDAL],
     neutralIcons: [ICON.WAND, ICON.BEETLE],
@@ -609,7 +609,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.GOLDENSOCKS],
   },
   {
-    text: "Can't fingure out how to unstick myself from this finger trap.",
+    text: "Can't figure out how to unstick myself from this finger trap.",
     perfectIcons: [ICON.HANDS],
     correctIcons: [ICON.BRAIN],
     neutralIcons: [ICON.GOLDENSOCKS, ICON.STAGBEETLE],
@@ -633,7 +633,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.CDPLAYER],
   },
   {
-    text: "The diamond finger tips caught the light. I'm sparkling.",
+    text: "The diamond finger-tips caught the light. I'm sparkling.",
     perfectIcons: [ICON.DIAMONDSNAPPY],
     correctIcons: [ICON.SPARKLES],
     neutralIcons: [ICON.SNAPPY, ICON.WIZARDHAT],
@@ -657,7 +657,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.MEDAL],
   },
   {
-    text: "Won epic award at work for my stinky sock collection. The reward is that I was fired",
+    text: "Won epic award at work for my stinky sock collection. The reward is that I was fired.",
     perfectIcons: [ICON.SOCK],
     correctIcons: [ICON.DIAMONDTROPHY],
     neutralIcons: [ICON.WOLF, ICON.CDPLAYER],
@@ -665,7 +665,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.HANDS],
   },
   {
-    text: "Too green to loved, rich to be hated. Being Martha is hard work.",
+    text: "Too green to loved, too rich to be hated. Being Martha is hard work.",
     perfectIcons: [ICON.GOBLIN],
     correctIcons: [ICON.HEART],
     neutralIcons: [ICON.FIRE, ICON.CROWN],
@@ -745,7 +745,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.LAUNDRYPILE],
   },
   {
-    text: "Gazed into the insects eyes. Ancient wisdom transferred.",
+    text: "Gazed into the insect's eyes. Ancient wisdom transferred.",
     perfectIcons: [ICON.STAGBEETLE],
     correctIcons: [ICON.GIFT],
     neutralIcons: [ICON.GOLDENSNAPPY, ICON.DIAMONDSNAPPY],
@@ -753,7 +753,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.DIAMONDSOCK],
   },
   {
-    text: "Put things into my laundry and then was bit by a monster....again",
+    text: "Put things into my laundry and then was bitten by a monster....again",
     perfectIcons: [ICON.BASKET],
     correctIcons: [ICON.WOLF],
     neutralIcons: [ICON.WALL, ICON.CLOCK],
@@ -809,7 +809,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.REDX],
   },
   {
-    text: "Ended up winning on a gameshow, I went last and everyone else had already failed!",
+    text: "Ended up winning on a game show, I went last and everyone else had already failed!",
     perfectIcons: [ICON.STAR],
     correctIcons: [ICON.TROPHY],
     neutralIcons: [ICON.ASTEROID, ICON.CDPLAYER],
@@ -825,7 +825,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.STOPWATCH],
   },
   {
-    text: "Channeled pure demon energy. People laughted so I smote them down.",
+    text: "Channeled pure demon energy. People laughed so I smote them down.",
     perfectIcons: [ICON.DEMON],
     correctIcons: [ICON.LIGHTNING],
     neutralIcons: [ICON.FIRE, ICON.TV],
@@ -849,7 +849,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.WASHINGMAC],
   },
   {
-    text: "Couldn't find a full costume, so I made due with what I had.",
+    text: "Couldn't find a full costume, so I made do with what I had.",
     perfectIcons: [ICON.GAUNTLET],
     correctIcons: [ICON.HAT],
     neutralIcons: [ICON.BARBELL, ICON.COIN],
@@ -873,7 +873,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.HAT],
   },
   {
-    text: "Funniest home videos? So anything with my brothers face then.",
+    text: "Funniest home videos? So anything with my brother's face then.",
     perfectIcons: [ICON.VHS],
     correctIcons: [ICON.GOBLIN],
     neutralIcons: [ICON.WIZARD, ICON.WAND],
@@ -905,7 +905,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.BULLSEYE],
   },
   {
-    text: "Ruined my friends backswing with the perfect noise. Then locked in my score",
+    text: "Ruined my friend's backswing with the perfect noise. Then locked in my score",
     perfectIcons: [ICON.SNAPPY],
     correctIcons: [ICON.LOCK],
     neutralIcons: [ICON.HANDS, ICON.WIZARDHAT],
@@ -929,7 +929,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.DIAMONDSNAPPY],
   },
   {
-    text: "Who knew eating 10 extra greasy hamburgers would give me a heartattack?",
+    text: "Who knew eating 10 extra greasy hamburgers would give me a heart attack?",
     perfectIcons: [ICON.HEART],
     correctIcons: [ICON.STOPWATCH],
     neutralIcons: [ICON.GOLDENSOCKS, ICON.ASTEROID],
@@ -945,7 +945,7 @@ const GAME_MESSAGES = [
     horribleIcons: [ICON.CLOCK],
   },
   {
-    text: "I'm now king but I'm not allowed to wear my comft clothes anymore.",
+    text: "I'm now king but I'm not allowed to wear my comfy clothes anymore.",
     perfectIcons: [ICON.CROWN],
     correctIcons: [ICON.SOCK],
     neutralIcons: [ICON.TEETH, ICON.DIAMONDSOCK],
